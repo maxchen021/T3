@@ -6,3 +6,9 @@ No more manual find and replace. No more worries about if someone forgot to repl
 You can access the tool here: https://maxchen021.github.io/T3/  
   
 ![screenshot 1](./images/screenshot1.png)
+
+## Run your own local copy via docker
+Use the following command to run the container:
+```
+docker run -d -p 80:80 maxchen021/t3
+```
