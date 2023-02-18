@@ -1,0 +1,95 @@
+<mvc:View
+	height="100%"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns="sap.m"
+	xmlns:t="sap.ui.table"
+	xmlns:m="sap.m"
+	controllerName="maxchen021.T3.controller.MainPage">
+	<Page
+		id="floatingFooterPage"
+		title="T3 - Text Templating Tool"
+		floatingFooter="false"
+		class="sapUiResponsivePadding--header sapUiResponsivePadding--content sapUiResponsivePadding--footer sapUiResponsivePadding--floatingFooter">
+
+		<m:VBox>
+			<m:Label design="Bold" text="Text Template:" class="sapUiTinyMargin" />
+			<TextArea growing="false" width="100%" id="idTextTemplateTextArea" rows="5" value="
+### This example is about how to rename a linux server hostname, please use the following command to rename the hostname ### &#13;&#10;
+&#13;&#10;
+sed -i s/\{\{original hostname[[ubuntu]]\}\}/\{\{new hostname\}\}/g /etc/hosts &#13;&#10;
+sed -i s/\{\{original hostname[[ubuntu]]\}\}/\{\{new hostname\}\}/g /etc/hostname &#13;&#10;
+			"/>
+		</m:VBox>
+
+		
+		
+		<m:HBox>
+			<m:VBox width="48%">
+				<m:Label design="Bold" text="User Input:" width="48%" class="sapUiTinyMargin"/>
+				<t:Table id="idUserInputTable"
+					width="100%"
+					enableSelectAll="false"
+					visibleRowCountMode="Interactive"
+					visibleRowCount="20"
+					ariaLabelledBy="title"
+					selectionMode="None"
+					rows="{
+										path: '/input_list'
+									}"
+							>
+						<t:columns>
+									<t:Column
+										autoResizable="true"
+										width="24%"
+										>
+										<m:Label text="Input Name" />
+										<t:template>
+											<m:Text text="{input_name}" wrapping="true" />
+										</t:template>
+									</t:Column>
+									<t:Column
+										autoResizable="true"
+										width="24%"
+										>
+										
+										<m:Label text="Input Value" />
+										
+										<t:template>
+											<m:Input value="{input_value}" />
+										</t:template>
+									</t:Column>
+						</t:columns>  
+				</t:Table>
+			</m:VBox>
+
+			<m:VBox width="4%">
+			<m:Label text="" width="4%"/>
+			</m:VBox>
+
+			<m:VBox width="48%" height="100%" >
+			<m:Label design="Bold" text="Final Output:" width="48%" class="sapUiTinyMargin"/>
+			<TextArea growing="false" id="idFinalOutputTextArea" rows="50" width="100%"/>
+			</m:VBox>
+			
+		</m:HBox>	
+		<footer>
+			<OverflowToolbar>
+				<m:Label text="Input Name Pattern:"/>
+				<m:Input id="idInputNamePattern" value="\{\{\}\}" width="80px"/>
+				<ToolbarSpacer width="20px" />
+				<m:Label text="Input Default Value Pattern:"/>
+				<m:Input id="idInputDefaultValuePattern" value="[[]]" width="80px"/>
+				<ToolbarSpacer />
+				<Button type="Ghost" icon="sap-icon://hint" text="Help" press="showHelpPage"/>
+				<ToolbarSpacer width="20px" />
+				<Button type="Ghost" icon="sap-icon://share" text="Get Link To Share" press="updateCurrentUrl"/>
+				<ToolbarSpacer width="20px" />
+				<Button type="Accept" text="Generate User Input" press="generateUserInput"/>
+				<ToolbarSpacer width="20px" />
+				<CheckBox text="Allow Empty Input Value" id="idAllowEmptyInputValueCheckBox" />
+				<ToolbarSpacer width="20px" />
+				<Button type="Emphasized" text="Generate Final Output" press="generateFinalOutput"/>
+			</OverflowToolbar>
+		</footer>
+	</Page>
+</mvc:View>

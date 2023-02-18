@@ -1,0 +1,31 @@
+{
+	"sap.app": {
+		"id": "maxchen021.T3",
+		"applicationVersion": {
+			"version": "1.0.0"
+		}
+	},
+	"sap.ui5": {
+		"rootView": {
+			"viewName": "maxchen021.T3.view.MainPage",
+			"type": "XML",
+			"async": true
+		},
+		"dependencies": {
+			"libs": {
+				"sap.m": {},
+				"sap.ui.core": {}
+			}
+		},
+		"config": {
+			"sample": {
+				"stretch": true,
+				"files": [
+					"view/MainPage.view.xml",
+					"controller/MainPage.controller.js",
+					"manifest.json"
+				]
+			}
+		}
+	}
+}
