@@ -16,7 +16,8 @@ def get_data_from_url():
         request_data = request.args
         #print(request_data)
         if request_data.get("url"):
-            response = requests.get(request_data["url"])
+            # calling .strip("%20").strip("%0A") twice since user can put space/new line (%20, %0A) in any order
+            response = requests.get(request_data["url"].strip().strip("%20").strip("%0A").strip("%20").strip("%0A"))
             return_response = make_response(response.text)
             return_response.status_code = response.status_code
             return_response.headers.set("Content-Type", "text/plain; charset=utf-8")

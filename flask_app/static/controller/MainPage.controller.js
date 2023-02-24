@@ -204,7 +204,7 @@ sap.ui.define([
         },
 
 		get_text_template_data_from_url: async function (url) {
-            let myObject = await fetch("/api/get-data-from-url?url=" + encodeURIComponent(url));
+            let myObject = await fetch("/api/get-data-from-url?url=" + encodeURIComponent(url.trim()));
             let text_template_data = await myObject.text();
 			return text_template_data;
 		},
