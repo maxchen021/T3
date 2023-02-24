@@ -213,6 +213,10 @@ sap.ui.define([
 			this.openBusyDialog();
 			this.parseInputNameAndValuePattern();
 			var text_template_data = this.getView().byId('idTextTemplateTextArea').getValue();
+			if (!text_template_data) {
+				this.displayErrorMessageBox("'Text Template' section is empty!");
+				return;
+			}
 			if (text_template_data && text_template_data.startsWith("http")) {
 				if (window.location.hostname == "maxchen021.github.io") {
 					this.displayErrorMessageBox("Getting data from url is not supported here. Please deploy your own local instance via docker")
@@ -220,6 +224,10 @@ sap.ui.define([
 				}
 				current_text_template_data_from_url	= await this.get_text_template_data_from_url(text_template_data);
 				text_template_data = current_text_template_data_from_url;
+				if (!text_template_data) {
+					this.displayErrorMessageBox("No text template data fetched from url!");
+					return;
+				}
 			}
             var parsed_input_list = this.parseInputList(text_template_data);
             var data = { "input_list": [] };
@@ -264,6 +272,10 @@ sap.ui.define([
             var final_output = this.getView().byId('idTextTemplateTextArea').getValue();
 			if (final_output && final_output.startsWith("http") && current_text_template_data_from_url) {
 				final_output = current_text_template_data_from_url;
+			}
+			if (!final_output) {
+				this.displayErrorMessageBox("'Text Template' section is empty!");
+				return;
 			}
             for (let i in input_list_data) {
                 var current_input = input_list_data[i];

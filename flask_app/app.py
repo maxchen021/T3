@@ -12,15 +12,18 @@ def index_html():
 
 @app.route("/api/get-data-from-url")
 def get_data_from_url():
-    request_data = request.args
-    #print(request_data)
-    if request_data.get("url"):
-        response = requests.get(request_data["url"])
-        return_response = make_response(response.text)
-        return_response.status_code = response.status_code
-        return_response.headers.set("Content-Type", "text/plain; charset=utf-8")
-        return return_response
-    else:
+    try:
+        request_data = request.args
+        #print(request_data)
+        if request_data.get("url"):
+            response = requests.get(request_data["url"])
+            return_response = make_response(response.text)
+            return_response.status_code = response.status_code
+            return_response.headers.set("Content-Type", "text/plain; charset=utf-8")
+            return return_response
+        else:
+            return ""
+    except:
         return ""
 
 def number_of_gunicorn_workers():
