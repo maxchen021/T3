@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # GUNICORN config settings / options
     # https://docs.gunicorn.org/en/stable/settings.html#settings
     options = {
-        "bind": "0.0.0.0:" + os.getenv("FLASK_HTTP_PORT", "8080"),
+        "bind": "0.0.0.0:" + os.getenv("T3_HTTP_PORT", "8080"),
         "workers": number_of_gunicorn_workers(),
         "threads": 1,
         "timeout": 300,
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "limit_request_line": 0,
         "capture_output": True,
         "enable_stdio_inheritance": True,
-        "accesslog": os.getenv("GUNICORN_ACCESSLOG"),
-        "errorlog": os.getenv("GUNICORN_ERRORLOG","-"),
+        "accesslog": os.getenv("T3_GUNICORN_ACCESSLOG"),
+        "errorlog": os.getenv("T3_GUNICORN_ERRORLOG","-"),
     }
     GunicornApplication(app, options).run()

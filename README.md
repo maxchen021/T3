@@ -18,7 +18,7 @@ docker run -d -p 80:8080 maxchen021/t3
   
 By default http access log is disabled, use the following command to run the container with the access log enabled:
 ```
-docker run -d -p 80:8080 -e "GUNICORN_ACCESSLOG=-" maxchen021/t3
+docker run -d -p 80:8080 -e "T3_GUNICORN_ACCESSLOG=-" maxchen021/t3
 ```  
   
 If you are using v1.0.0, use the following command to run the container:
