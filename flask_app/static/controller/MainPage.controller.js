@@ -9,6 +9,9 @@ sap.ui.define([
     var input_default_value_begin_char = "";
     var input_default_value_end_char = "";
 	var final_output_generated = "false";
+	var current_text_template_data_from_url = "";
+	var busy_dialog = new sap.m.BusyDialog('busy_dialog', { text: "Please wait ....", title: 'Loading', showCancelButton: true, cancelButtonText: 'Close this dialog' });
+	var busy_dialog_opened = false;
 
 	var PageController = Controller.extend("maxchen021.T3.controller.MainPage", {
 		onInit: function () {	
@@ -17,6 +20,21 @@ sap.ui.define([
 		onBeforeRendering: function () {
             this.updateDataFromUrl();
         },
+
+		openBusyDialog: function() {
+			if (!busy_dialog_opened) {
+				busy_dialog.setText("Please wait ....");
+				busy_dialog.open();
+				busy_dialog_opened = true;
+			}
+		},
+
+		closeBusyDialog: function() {
+			if (busy_dialog_opened) {
+				busy_dialog.close();
+				busy_dialog_opened = false;
+			}
+		},
 
 		displaySuccessMessageBox(msg, title="Success") {
 			jQuery.sap.require("sap.m.MessageBox");
@@ -34,6 +52,7 @@ sap.ui.define([
 				icon: sap.m.MessageBox.Icon.ERROR,
 				title: title
 			});
+			this.closeBusyDialog();
 		},
 
 		displayWarningMessageBox(msg, title="Warning") {
@@ -52,7 +71,7 @@ sap.ui.define([
 
 		showHelpPage: function() {
 			var msg = `
-			Step 1. Enter your data in the "Text Template" section (You can adjust the "Input Name Pattern" and "Input Default Value Pattern" per your need).\n
+			Step 1. Enter your data in the "Text Template" section or enter the url containing the data (You can adjust the "Input Name Pattern" and "Input Default Value Pattern" per your need).\n
 			Step 2. Click the "Generate User Input" button to generate the "User Input" section.\n
 			Step 3. Complete the "User Input" section or click the "Get Link To Share" button to share it with your user to complete it.\n
 			Step 4. Click the "Generate Final Output" button to get the final output in the "Final Output" section (You can also click the "Get Link To Share" button to share all the data).\n
@@ -63,7 +82,6 @@ sap.ui.define([
 		doesEmptyUserInputDataExist: function() {
 			var oTable = this.getView().byId('idUserInputTable');
             var oModel = oTable.getModel();
-            //console.log(oModel);
             var input_list_data = oModel.oData.input_list;
 			for (let i in input_list_data) {
                 var current_input = input_list_data[i];
@@ -114,6 +132,7 @@ sap.ui.define([
 				if (temp && temp.length > 1) {
 					var queryString = temp[1];
 					if (queryString) {
+						this.openBusyDialog();
 						var urlParams = new URLSearchParams(queryString);
 						this.setValueFromUrlParams(urlParams, "textTemplate", "idTextTemplateTextArea");
 						this.setValueFromUrlParams(urlParams, "inputNamePattern", "idInputNamePattern");
@@ -121,10 +140,16 @@ sap.ui.define([
 						if (urlParams.get("allowEmptyInputValue") && urlParams.get("allowEmptyInputValue") == "true") {
 							this.getView().byId('idAllowEmptyInputValueCheckBox').setSelected(true);
 						}
-						if (urlParams.get("userInputData")) {
+
+						if (urlParams.get("textTemplate") && urlParams.get("textTemplate").startsWith("http")) {
+							if (window.location.hostname == "maxchen021.github.io") {
+								this.displayErrorMessageBox("Getting data from url is not supported here. Please deploy your own local instance via docker")
+								return;
+							}
+							this.generateUserInput();
+						}
+						else if (urlParams.get("userInputData")) {
 							var oModel = new JSONModel();
-							//console.log(urlParams.get("userInputData"));
-							//console.log(JSON.parse(urlParams.get("userInputData")));
 							oModel.setData(JSON.parse(urlParams.get("userInputData")));
 							var oTable = this.getView().byId('idUserInputTable');
 							oTable.setModel(oModel);
@@ -134,6 +159,7 @@ sap.ui.define([
 							}
 						}
 						load_data_from_url = true;
+						this.closeBusyDialog();
 					}
 				}
 			}
@@ -166,24 +192,44 @@ sap.ui.define([
 		parseInputList: function (text_template) {
             var parsed_input_list = [];
             var regex = new RegExp(input_name_begin_char + "(.*?)" + input_name_end_char, "g");
-            //console.log(regex);
             var matches = text_template.match(regex);
-            //console.log(matches);
             for (let i in matches) {
                 var input_name = matches[i].replace(input_name_begin_char, "").replace(input_name_end_char, "");
                 if (parsed_input_list.includes(input_name) == false) {
                     parsed_input_list.push(input_name);
                 }
             }
-            //console.log(parsed_input_list);
             return parsed_input_list;
 
         },
 
-		generateUserInput: function() {
+		get_text_template_data_from_url: async function (url) {
+            let myObject = await fetch("/api/get-data-from-url?url=" + encodeURIComponent(url.trim()));
+            let text_template_data = await myObject.text();
+			return text_template_data;
+		},
+
+		generateUserInput: async function() {
+			this.openBusyDialog();
 			this.parseInputNameAndValuePattern();
-            var parsed_input_list = this.parseInputList(this.getView().byId('idTextTemplateTextArea').getValue());
-			//console.log(parsed_input_list);
+			var text_template_data = this.getView().byId('idTextTemplateTextArea').getValue();
+			if (!text_template_data) {
+				this.displayErrorMessageBox("'Text Template' section is empty!");
+				return;
+			}
+			if (text_template_data && text_template_data.startsWith("http")) {
+				if (window.location.hostname == "maxchen021.github.io") {
+					this.displayErrorMessageBox("Getting data from url is not supported here. Please deploy your own local instance via docker")
+					return;
+				}
+				current_text_template_data_from_url	= await this.get_text_template_data_from_url(text_template_data);
+				text_template_data = current_text_template_data_from_url;
+				if (!text_template_data) {
+					this.displayErrorMessageBox("No text template data fetched from url!");
+					return;
+				}
+			}
+            var parsed_input_list = this.parseInputList(text_template_data);
             var data = { "input_list": [] };
             for (let i in parsed_input_list) {
                 var original_input_name = parsed_input_list[i];
@@ -206,12 +252,13 @@ sap.ui.define([
             oTable.setModel(oModel);
 			this.getView().byId('idFinalOutputTextArea').setValue("");
 			final_output_generated = "false";
-			
+			this.closeBusyDialog();
         },
 
 		
 
 		generateFinalOutput: function() {
+			this.openBusyDialog();
 			if (!this.getView().byId('idAllowEmptyInputValueCheckBox').getSelected()) {
 				if (this.doesEmptyUserInputDataExist()) {
 					this.displayErrorMessageBox("Empty Input Value!");
@@ -221,17 +268,22 @@ sap.ui.define([
 			}
             var oTable = this.getView().byId('idUserInputTable');
             var oModel = oTable.getModel();
-            //console.log(oModel);
             var input_list_data = oModel.oData.input_list;
-            //console.log(input_list_data);
             var final_output = this.getView().byId('idTextTemplateTextArea').getValue();
-            //console.log(final_output);
+			if (final_output && final_output.startsWith("http") && current_text_template_data_from_url) {
+				final_output = current_text_template_data_from_url;
+			}
+			if (!final_output) {
+				this.displayErrorMessageBox("'Text Template' section is empty!");
+				return;
+			}
             for (let i in input_list_data) {
                 var current_input = input_list_data[i];
                 final_output = final_output.replaceAll(input_name_begin_char + current_input["original_input_name"] + input_name_end_char, current_input["input_value"]);
             }
             this.getView().byId('idFinalOutputTextArea').setValue(final_output);
 			final_output_generated = "true";
+			this.closeBusyDialog();
         },
 		
 	});

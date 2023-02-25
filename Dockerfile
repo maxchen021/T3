@@ -1,2 +1,6 @@
-FROM nginx
-COPY html /usr/share/nginx/html
+FROM python:3.11
+COPY flask_app /opt/T3
+RUN pip install -r /opt/T3/requirements.txt && useradd -m python && chown -R python /opt/T3
+USER python
+WORKDIR /opt/T3
+ENTRYPOINT ["python", "app.py"]
