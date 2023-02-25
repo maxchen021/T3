@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "limit_request_line": 0,
         "capture_output": True,
         "enable_stdio_inheritance": True,
-        "accesslog": "-",
-        "errorlog": "-",
+        "accesslog": os.getenv("GUNICORN_ACCESSLOG"),
+        "errorlog": os.getenv("GUNICORN_ERRORLOG","-"),
     }
     GunicornApplication(app, options).run()
