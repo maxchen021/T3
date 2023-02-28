@@ -1,4 +1,5 @@
-FROM python:3.11
+ARG ARCH=
+FROM ${ARCH}python:3.11-alpine
 COPY flask_app /opt/T3
 RUN pip install -r /opt/T3/requirements.txt && useradd -m python && chown -R python /opt/T3
 USER python
