@@ -2,7 +2,7 @@
 	"sap.app": {
 		"id": "maxchen021.T3",
 		"applicationVersion": {
-			"version": "1.0.2"
+			"version": "1.0.3"
 		}
 	},
 	"sap.ui5": {

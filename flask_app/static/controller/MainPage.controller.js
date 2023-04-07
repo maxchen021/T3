@@ -15,6 +15,7 @@ sap.ui.define([
 
 	var PageController = Controller.extend("maxchen021.T3.controller.MainPage", {
 		onInit: function () {	
+			$("#splash-screen").remove();
 		},
 
 		onBeforeRendering: function () {
@@ -92,8 +93,27 @@ sap.ui.define([
 			return false;
 		},
 
+		compressData: function(data) {
+			let u8 = new TextEncoder("utf-8").encode(data);
+			const compressedData = pako.deflate(u8);
+			let b64 = Base64.fromUint8Array(compressedData, true);
+			//console.log(b64);
+			return b64;
+		},
+
+		decompressData: function(data) {
+			let compressedBytes = Base64.toUint8Array(data);
+			let result = pako.inflate(compressedBytes);
+			let decompressedStr = new TextDecoder("utf-8").decode(result);
+			//console.log(decompressedStr);
+			return decompressedStr;
+		},
+
 		updateCurrentUrl: function() {
 			var text_template = this.getView().byId('idTextTemplateTextArea').getValue();
+			if (text_template) {
+				text_template = this.compressData(text_template);
+			}
 			var input_name_pattern = this.getView().byId('idInputNamePattern').getValue();
 			if (input_name_pattern.length % 2 != 0) {
 				this.displayErrorMessageBox("Input Name Pattern must be even length!");
@@ -105,11 +125,14 @@ sap.ui.define([
 				return;
 			}
 			var user_input_data = this.getView().byId('idUserInputTable').getModel().getJSON();
+			if (user_input_data) {
+				user_input_data = this.compressData(user_input_data);
+			}
 			var allow_empty_input_value = "false";
 			if (this.getView().byId('idAllowEmptyInputValueCheckBox').getSelected()) {
 				allow_empty_input_value = "true";
 			}
-			var url_param = "textTemplate=" + encodeURIComponent(text_template) + '&inputNamePattern=' + encodeURIComponent(input_name_pattern) + '&inputDefaultValuePattern=' + encodeURIComponent(input_default_value_pattern) + '&userInputData=' + encodeURIComponent(user_input_data) + '&finalOutputGenerated=' + final_output_generated + '&allowEmptyInputValue=' + allow_empty_input_value;
+			var url_param = "textTemplate=" + encodeURIComponent(text_template) + '&inputNamePattern=' + encodeURIComponent(input_name_pattern) + '&inputDefaultValuePattern=' + encodeURIComponent(input_default_value_pattern) + '&userInputData=' + encodeURIComponent(user_input_data) + '&finalOutputGenerated=' + final_output_generated + '&allowEmptyInputValue=' + allow_empty_input_value + '&compression=true';
 			window.location.hash = "?" + url_param;
 			if (url_param.length > 8000) {
 				this.displayWarningMessageBox("This link might be too large to share depending on the browser used to load this link!\n\nPlease copy the url on your browser's address bar");
@@ -134,14 +157,24 @@ sap.ui.define([
 					if (queryString) {
 						this.openBusyDialog();
 						var urlParams = new URLSearchParams(queryString);
-						this.setValueFromUrlParams(urlParams, "textTemplate", "idTextTemplateTextArea");
+						let compression = false;
+						if (urlParams.get("compression") && urlParams.get("compression") == "true") {
+							compression = true;
+						}
+						let textTemplate = urlParams.get("textTemplate");
+						if (compression && textTemplate) {
+							textTemplate = this.decompressData(textTemplate);
+						}
+						if (textTemplate) {
+							this.getView().byId("idTextTemplateTextArea").setValue(textTemplate);
+						}
 						this.setValueFromUrlParams(urlParams, "inputNamePattern", "idInputNamePattern");
 						this.setValueFromUrlParams(urlParams, "inputDefaultValuePattern", "idInputDefaultValuePattern");
 						if (urlParams.get("allowEmptyInputValue") && urlParams.get("allowEmptyInputValue") == "true") {
 							this.getView().byId('idAllowEmptyInputValueCheckBox').setSelected(true);
 						}
 
-						if (urlParams.get("textTemplate") && urlParams.get("textTemplate").startsWith("http")) {
+						if (textTemplate && textTemplate.startsWith("http")) {
 							if (window.location.hostname == "maxchen021.github.io") {
 								this.displayErrorMessageBox("Getting data from url is not supported here. Please deploy your own local instance via docker")
 								return;
@@ -149,8 +182,12 @@ sap.ui.define([
 							this.generateUserInput();
 						}
 						else if (urlParams.get("userInputData")) {
+							let userInputData = urlParams.get("userInputData");
+							if (compression) {
+								userInputData = this.decompressData(userInputData);
+							}
 							var oModel = new JSONModel();
-							oModel.setData(JSON.parse(urlParams.get("userInputData")));
+							oModel.setData(JSON.parse(userInputData));
 							var oTable = this.getView().byId('idUserInputTable');
 							oTable.setModel(oModel);
 							this.parseInputNameAndValuePattern();
@@ -191,7 +228,7 @@ sap.ui.define([
 
 		parseInputList: function (text_template) {
             var parsed_input_list = [];
-            var regex = new RegExp(input_name_begin_char + "(.*?)" + input_name_end_char, "g");
+            var regex = new RegExp(input_name_begin_char + "([\\s\\S]*?)" + input_name_end_char, "g");
             var matches = text_template.match(regex);
             for (let i in matches) {
                 var input_name = matches[i].replace(input_name_begin_char, "").replace(input_name_end_char, "");
