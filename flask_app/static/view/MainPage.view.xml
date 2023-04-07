@@ -55,7 +55,7 @@ sed -i s/\{\{original hostname[[ubuntu]]\}\}/\{\{new hostname\}\}/g /etc/hostnam
 										<m:Label text="Input Value" />
 										
 										<t:template>
-											<m:Input value="{input_value}" />
+											<TextArea growing="false" width="100%" rows="2" value="{input_value}" />
 										</t:template>
 									</t:Column>
 						</t:columns>  
