@@ -3,6 +3,9 @@ import os, json
 import gunicorn.app.base
 import multiprocessing
 import requests
+from urllib.parse import urlparse
+
+http_auth_file = "/etc/T3/http_auth.json"
 
 app = Flask(__name__)
 
@@ -16,7 +19,17 @@ def get_data_from_url():
         request_data = request.args
         #print(request_data)
         if request_data.get("url"):
-            response = requests.get(request_data["url"])
+            url = request_data["url"]
+            parsed_url = urlparse(url)
+            hostname = parsed_url.hostname
+            if "@" not in url and os.path.exists(http_auth_file):
+                with open(http_auth_file) as f:
+                    http_auth_data = json.load(f)
+                    if http_auth_data.get(hostname):
+                        username = http_auth_data[hostname]["username"]
+                        password = http_auth_data[hostname]["password"]
+                        url = url.replace(hostname, f"{username}:{password}@{hostname}")
+            response = requests.get(url)
             return_response = make_response(response.text)
             return_response.status_code = response.status_code
             return_response.headers.set("Content-Type", "text/plain; charset=utf-8")
