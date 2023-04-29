@@ -36,7 +36,7 @@ nginx.ingress.kubernetes.io/server-snippet: |
 
 ## HTTP basic authentication support
 If your text templates are hosted in a web server that require authentication and you don't want to put the credential in the url (text template input) when sharing it, it is now possible to define the credential details in the server configuration starting at v1.0.4.
-You would need to define a http_auth.json file to be mounted under /etc/T3/http_auth.json so that the tool can use it to authenticate. This file is being read on each request so there is no need to restart the container after updating the file.  
+You would need to define a http_auth.json file to be mounted under /etc/T3/http_auth.json so that the tool can use it to authenticate. This file is being read on each request so there is no need to restart the container after updating the file. This file should be readable by user id 1000.   
 
 http_auth.json example:
 ```
@@ -54,7 +54,7 @@ http_auth.json example:
 
 docker command:
 ```
-docker run -d -p 80:8080 -v http_auth.json:/etc/T3/http_auth.json maxchen021/t3
+docker run -d -p 80:8080 -v "$(pwd)"/http_auth.json:/etc/T3/http_auth.json maxchen021/t3
 ```
 
 The input url for the tool is just a regular url without credential info. The tool will auto detect the domain name/server name and add the credential to the url.  
